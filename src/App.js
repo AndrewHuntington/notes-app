@@ -15,7 +15,22 @@ export default function App() {
     (notes[0] && notes[0].id) || ""
   );
 
+  function sortNotes(notes) {
+    setNotes(
+      notes.sort((a, b) => {
+        if (a.updatedAt < b.updatedAt) {
+          return 1;
+        }
+        if (a.updatedAt > b.updatedAt) {
+          return -1;
+        }
+        return 0;
+      })
+    );
+  }
+
   useEffect(() => {
+    sortNotes(notes);
     localStorage.setItem("notes", JSON.stringify(notes));
   }, [notes]);
 
@@ -23,6 +38,7 @@ export default function App() {
     const newNote = {
       id: nanoid(),
       body: "# Type your markdown note's title here",
+      updatedAt: Date.now(),
     };
     setNotes((prevNotes) => [newNote, ...prevNotes]);
     setCurrentNoteId(newNote.id);
@@ -32,10 +48,15 @@ export default function App() {
     setNotes((oldNotes) =>
       oldNotes.map((oldNote) => {
         return oldNote.id === currentNoteId
-          ? { ...oldNote, body: text }
+          ? { ...oldNote, body: text, updatedAt: Date.now() }
           : oldNote;
       })
     );
+  }
+
+  function deleteNote(event, noteId) {
+    event.stopPropagation();
+    setNotes((oldNotes) => oldNotes.filter((note) => note.id !== noteId));
   }
 
   function findCurrentNote() {
@@ -55,6 +76,7 @@ export default function App() {
             currentNote={findCurrentNote()}
             setCurrentNoteId={setCurrentNoteId}
             newNote={createNewNote}
+            deleteNote={deleteNote}
           />
           {currentNoteId && notes.length > 0 && (
             <Editor currentNote={findCurrentNote()} updateNote={updateNote} />
